@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" type="text/css" href="/static/styles.css" />
+    <title>Build-a-Blog</title>
+  </head>
+  <body>
+
+<div class="header">
+  <div> <a href="/add">Add a New Post</a>  
+  {% comment %} Add a conditional to differentiate when a person is logged in or out and
+  change this link accordingly {% endcomment %}
+  <div> <a href="/logout">Log Out</a></div>
+</div>
+
+  {% with messages = get_flashed_messages(with_categories=True) %}
+  <ul>
+  {% for category, message in messages %}
+  
+  <li class={{ category }}>{{ message }}</li>
+  
+  {% endfor %}
+  </ul>
+  {% endwith %}
+
+    {% block content %} 
+    {% endblock %}
+  </body>
+</html>
