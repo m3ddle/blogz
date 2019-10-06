@@ -82,10 +82,20 @@ def index():
                            title_error=title_error, body_error=body_error)
 
 
-@app.route("/add", methods=["POST", "GET"])
+@app.route("/view-post")
+def view_post():
+    post_id = request.args.get("post")
+    post = Post.query.get(int(post_id))
+    post_title = post.title
+    post_body = post.body
+
+    return render_template("view-post.html", post_body=post_body, post_title=post_title)
+
+
+@app.route("/add-post", methods=["POST", "GET"])
 def add_post():
 
-    return render_template("add.html")
+    return render_template("add-post.html")
 
 
 if __name__ == "__main__":
