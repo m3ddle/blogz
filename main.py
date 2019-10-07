@@ -82,7 +82,7 @@ def index():
                            title_error=title_error, body_error=body_error)
 
 
-@app.route("/view-post")
+@app.route("/view-post", methods=["POST", "GET"])
 def view_post():
     post_id = request.args.get("post")
     post = Post.query.get(int(post_id))
@@ -94,8 +94,32 @@ def view_post():
 
 @app.route("/add-post", methods=["POST", "GET"])
 def add_post():
+    post_title = ""
+    post_body = ""
+    title_error = ""
+    body_error = ""
+    posts = Post.query.all()
+    if request.method == "POST":
+        post_title = request.form["post-title"]
+        post_body = request.form["new-post"]
 
-    return render_template("add-post.html")
+        if post_title == "" or post_body == "":
+            if post_title == "":
+                title_error = "Must have a title."
+
+            if post_body == "":
+                body_error = "Wheres the post!?"
+
+            return render_template("add-post.html", title="Build a Blog",
+                                   title_error=title_error, body_error=body_error, post_title=post_title, post_body=post_body)
+
+        new_post = Post(post_title, post_body, datetime.datetime.now())
+        db.session.add(new_post)
+        db.session.commit()
+        new_post_id = new_post.id
+        return redirect(f"/view-post?post={new_post_id}")
+    return render_template("add-post.html", title="Build a Blog",
+                           title_error=title_error, body_error=body_error)
 
 
 if __name__ == "__main__":

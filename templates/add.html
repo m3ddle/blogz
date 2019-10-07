@@ -3,9 +3,10 @@
 <h1>Add a new Post</h1>
 
     <div class="new-post container">
-    <form action="/" method="post">
+    <form action="/add-post" method="post">
         <div id="post-title-form">
             <label for="post-title">Post Title</label>
+            <br>
             {% if post_title != "" %}
             <input name="post-title" type="text" value={{ post_title }}>
             {% else %}
@@ -15,6 +16,7 @@
         </div>
         <div id= "new-post-form">
             <label for="new-post" type="text" value="new-post">Post Body</label>
+            <br>
             <textarea name="new-post" cols="50" rows="10" value="post-body">{% if post_body != "" %}{{ post_body }}{% endif %}</textarea>
             <p class="error">{{ body_error }}</p>
         </div>

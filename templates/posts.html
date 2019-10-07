@@ -6,9 +6,8 @@
 
 <ul>
 {% for post in posts %}
-<li><a href="/view-post?post={{ post.id }}">{{ post.title }}</a></li>
+<li><a href="/view-post?post={{ post.id }}">{{ post.title }}</a>  | {{post.date}}</li>
 <li> {{ post.body }}</li>
-<li>{{post.date}}</li>
 {% endfor %}
 
 
