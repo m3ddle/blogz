@@ -5,7 +5,7 @@ import datetime
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://build-a-blog:gitrdone@localhost:3307/build-a-blog"
+app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://blogz:gitrdone@localhost:3307/blogz"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 app.secret_key = "qwertyuiop"
@@ -32,26 +32,24 @@ class Post(db.Model):
     title = db.Column(db.String(120))
     body = db.Column(db.Text)
     date = db.Column(db.DateTime)
-    # This will be used when I implement users
-    #owner_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    owner_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
-    def __init__(self, title, body, date):
+    def __init__(self, title, body, date, owner_id):
         self.title = title
         self.body = body
         self.date = date
-        #self.owner = owner_id
+        self.owner = owner_id
 
-# Saving this class for when it is time to implement users
 
-# class User(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     email = db.Column(db.String(120), unique=True)
-#     password = db.Column(db.String(120))
-#     posts = db.relationship("Post", backref="owner")
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True)
+    password = db.Column(db.String(120))
+    posts = db.relationship("Post", backref="owner")
 
-#     def __init__(self, email, password):
-#         self.email = email
-#         self.password = password
+    def __init__(self, email, password):
+        self.email = email
+        self.password = password
 
 
 @app.route("/", methods=["POST", "GET"])
@@ -82,6 +80,30 @@ def index():
                            title_error=title_error, body_error=body_error)
 
 
+@app.route("/register", methods=['POST', 'GET'])
+def register():
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+        verify = request.form["verify"]
+
+        # TODO: Validate user data
+
+        existing_user = User.query.filter_by(email=email).first()
+
+        if not existing_user:
+            new_user = User(email, password)
+            db.session.add(new_user)
+            db.session.commit()
+            session["email"] = email
+            return redirect("/")
+        else:
+            # TODO: use a better message here
+            return "<h1>Duplicate user</h1>"
+
+    return render_template("register.html")
+
+
 @app.route("/view-post", methods=["POST", "GET"])
 def view_post():
     post_id = request.args.get("post")
@@ -102,6 +124,8 @@ def add_post():
     if request.method == "POST":
         post_title = request.form["post-title"]
         post_body = request.form["new-post"]
+        owner = User.query.filter_by(email=session["email"]).first()
+        owner_id = owner.id
 
         if post_title == "" or post_body == "":
             if post_title == "":
@@ -113,7 +137,8 @@ def add_post():
             return render_template("add-post.html", title="Build a Blog",
                                    title_error=title_error, body_error=body_error, post_title=post_title, post_body=post_body)
 
-        new_post = Post(post_title, post_body, datetime.datetime.now())
+        new_post = Post(post_title, post_body,
+                        datetime.datetime.now(), 400)
         db.session.add(new_post)
         db.session.commit()
         new_post_id = new_post.id
