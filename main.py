@@ -1,5 +1,6 @@
 from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
+from hashutils import check_pw_hash
 import os
 import datetime
 
@@ -26,6 +27,13 @@ app.secret_key = "qwertyuiop"
 
 # Good luck!
 
+# ================
+
+# TODO: Finish linking user class to new posts so that each post is assigned the id
+# of the user that created it. May involve setting up the login route and some kind of
+# global variable (the session object) to carry the email (or user id) of the
+# logged-in user.
+
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -34,11 +42,11 @@ class Post(db.Model):
     date = db.Column(db.DateTime)
     owner_id = db.Column(db.Integer, db.ForeignKey("user.id"))
 
-    def __init__(self, title, body, date, owner_id):
+    def __init__(self, title, body, date, owner):
         self.title = title
         self.body = body
         self.date = date
-        self.owner = owner_id
+        self.owner = owner
 
 
 class User(db.Model):
@@ -52,6 +60,14 @@ class User(db.Model):
         self.password = password
 
 
+@app.before_request
+def require_login():
+    allowed_routes = ["login", "register"]
+    print(session)
+    if request.endpoint not in allowed_routes and "email" not in session:
+        return redirect("/login")
+
+
 @app.route("/", methods=["POST", "GET"])
 def index():
     title_error = ""
@@ -60,6 +76,7 @@ def index():
     if request.method == "POST":
         post_title = request.form["post-title"]
         post_body = request.form["new-post"]
+        owner = User.query.filter_by(email=session["email"]).first()
 
         if post_title == "" or post_body == "":
             if post_title == "":
@@ -68,12 +85,15 @@ def index():
             if post_body == "":
                 body_error = "Wheres the post!?"
 
-            return render_template("posts.html", title="Build a Blog",
-                                   posts=posts, title_error=title_error, body_error=body_error, post_title=post_title, post_body=post_body)
+            return render_template("add-post.html", title="Build a Blog",
+                                   title_error=title_error, body_error=body_error, post_title=post_title, post_body=post_body)
 
-        new_post = Post(post_title, post_body, datetime.datetime.now())
+        new_post = Post(post_title, post_body,
+                        datetime.datetime.now(), owner)
         db.session.add(new_post)
         db.session.commit()
+        new_post_id = new_post.id
+
     posts = Post.query.all()
 
     return render_template("posts.html", title="Build a Blog", posts=posts,
@@ -82,26 +102,81 @@ def index():
 
 @app.route("/register", methods=['POST', 'GET'])
 def register():
+    email = ""
+    email_error = ""
+    password_error = ""
+    verify_error = ""
     if request.method == "POST":
         email = request.form["email"]
         password = request.form["password"]
         verify = request.form["verify"]
+        email_error = ""
+        password_error = ""
+        verify_error = ""
 
+        if password == "":
+            password_error = "Password cannot be blank. "
+
+        elif len(password) < 3 or len(password) > 20:
+            password = ""
+            verify = ""
+            password_error = password_error + \
+                "Password must be between 3 and 20 characters in length. "
+
+        if verify == "":
+            verify_error = "Password cannot be blank. "
+
+        if " " in email:
+            email_error = email_error + "Username cannot contain spaces. "
+
+        if " " in password:
+            password = ""
+            verify = ""
+            password_error = password_error + "Password cannot contain spaces. "
+
+        if password != verify:
+            password = ""
+            verify = ""
+            verify_error = verify_error + "Does not match password. "
         # TODO: Validate user data
+        if not email_error and not password_error and not verify_error:
 
-        existing_user = User.query.filter_by(email=email).first()
+            existing_user = User.query.filter_by(email=email).first()
 
-        if not existing_user:
-            new_user = User(email, password)
-            db.session.add(new_user)
-            db.session.commit()
+            if not existing_user:
+                new_user = User(email, password)
+                db.session.add(new_user)
+                db.session.commit()
+                session["email"] = email
+                return redirect("/add-post")
+            else:
+                # TODO: use a better message here
+                return "<h1>Duplicate user</h1>"
+
+    return render_template("register.html", email_error=email_error, password_error=password_error, verify_error=verify_error, email=email)
+
+
+@app.route("/login", methods=['POST', 'GET'])
+def login():
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+        user = User.query.filter_by(email=email).first()
+        if user and check_pw_hash(password, user.pw_hash):
+
             session["email"] = email
-            return redirect("/")
+            flash("Logged in")
+            print(session)
+            return redirect("/add-post")
         else:
-            # TODO: use a better message here
-            return "<h1>Duplicate user</h1>"
+            flash("User password incorrect, or user does not exist", "error")
+    return render_template("login.html")
 
-    return render_template("register.html")
+
+@app.route("/logout")
+def logout():
+    del session["email"]
+    return redirect('/')
 
 
 @app.route("/view-post", methods=["POST", "GET"])
@@ -125,7 +200,6 @@ def add_post():
         post_title = request.form["post-title"]
         post_body = request.form["new-post"]
         owner = User.query.filter_by(email=session["email"]).first()
-        owner_id = owner.id
 
         if post_title == "" or post_body == "":
             if post_title == "":
@@ -138,7 +212,7 @@ def add_post():
                                    title_error=title_error, body_error=body_error, post_title=post_title, post_body=post_body)
 
         new_post = Post(post_title, post_body,
-                        datetime.datetime.now(), 400)
+                        datetime.datetime.now(), owner)
         db.session.add(new_post)
         db.session.commit()
         new_post_id = new_post.id
