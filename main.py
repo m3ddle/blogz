@@ -1,6 +1,6 @@
 from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
-from hashutils import check_pw_hash
+from hashutils import check_pw_hash, make_pw_hash, make_salt
 import os
 import datetime
 
@@ -20,6 +20,10 @@ app.secret_key = "qwertyuiop"
 # import this file and the appropriate classes:
 
 # $ from main import db, Post, User etc.
+
+# instruct mysql to delete(drop) all tables
+
+# $ db.drop_all()
 
 # instruct mysql to create all tables:
 
@@ -52,12 +56,12 @@ class Post(db.Model):
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True)
-    password = db.Column(db.String(120))
+    pw_hash = db.Column(db.String(120))
     posts = db.relationship("Post", backref="owner")
 
-    def __init__(self, email, password):
+    def __init__(self, email, pw_hash):
         self.email = email
-        self.password = password
+        self.pw_hash = pw_hash
 
 
 @app.before_request
@@ -144,7 +148,7 @@ def register():
             existing_user = User.query.filter_by(email=email).first()
 
             if not existing_user:
-                new_user = User(email, password)
+                new_user = User(email, make_pw_hash(password))
                 db.session.add(new_user)
                 db.session.commit()
                 session["email"] = email
@@ -162,7 +166,7 @@ def login():
         email = request.form["email"]
         password = request.form["password"]
         user = User.query.filter_by(email=email).first()
-        if user and check_pw_hash(password, user.pw_hash):
+        if email in User.query.filter_by(email=email).all() and check_pw_hash(password, user.pw_hash) == True:
 
             session["email"] = email
             flash("Logged in")
@@ -219,6 +223,15 @@ def add_post():
         return redirect(f"/view-post?post={new_post_id}")
     return render_template("add-post.html", title="Build a Blog",
                            title_error=title_error, body_error=body_error)
+
+
+@app.route("/blog")
+def blog():
+    user_id = request.args.get("user")
+    posts = Post.query.filter_by(owner_id=user_id).all()
+    username = User.query.filter_by(id=user_id).first()
+
+    return render_template("blog.html", posts=posts, username=username.email)
 
 
 if __name__ == "__main__":

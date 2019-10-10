@@ -6,7 +6,7 @@
 
 <ul>
 {% for post in posts %}
-<li><a href="/view-post?post={{ post.id }}">{{ post.title }}</a>  | {{post.date}}</li>
+<li><a href="/view-post?post={{ post.id }}">{{ post.title }}</a>  by <a href="/blog?user={{post.owner.id}}"> {{ post.owner.email }} </a> on {{post.date}}</li>
 <li> {{ post.body }}</li>
 {% endfor %}
 
