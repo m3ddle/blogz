@@ -3,65 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from hashutils import check_pw_hash, make_pw_hash, make_salt
 import os
 import datetime
-
-app = Flask(__name__)
-app.config['DEBUG'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://blogz:gitrdone@localhost:3307/blogz"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
-app.secret_key = "qwertyuiop"
-
-
-# Note: To update the database with these model classes do the following:
-
-# Open a python shell:
-# $ python
-
-# import this file and the appropriate classes:
-
-# $ from main import db, Post, User etc.
-
-# instruct mysql to delete(drop) all tables
-
-# $ db.drop_all()
-
-# instruct mysql to create all tables:
-
-# $ db.create_all()
-
-# Good luck!
-
-# ================
-
-# TODO: Finish linking user class to new posts so that each post is assigned the id
-# of the user that created it. May involve setting up the login route and some kind of
-# global variable (the session object) to carry the email (or user id) of the
-# logged-in user.
-
-
-class Post(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(120))
-    body = db.Column(db.Text)
-    date = db.Column(db.DateTime)
-    owner_id = db.Column(db.Integer, db.ForeignKey("user.id"))
-
-    def __init__(self, title, body, date, owner):
-        self.title = title
-        self.body = body
-        self.date = date
-        self.owner = owner
-
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True)
-    pw_hash = db.Column(db.String(120))
-    posts = db.relationship("Post", backref="owner")
-
-    def __init__(self, email, pw_hash):
-        self.email = email
-        self.pw_hash = pw_hash
+from app import app, db
+from app.models import User, Post
 
 
 @app.before_request
@@ -242,7 +185,3 @@ def blog():
 
     return render_template("posts.html", title="Build a Blog", posts=posts,
                            title_error=title_error, body_error=body_error)
-
-
-if __name__ == "__main__":
-    app.run()
