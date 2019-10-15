@@ -72,8 +72,15 @@ def require_login():
         return redirect("/login")
 
 
-@app.route("/", methods=["POST", "GET"])
+@app.route("/")
 def index():
+    user_list = User.query.all()
+
+    return render_template("index.html", user_list=user_list)
+
+
+@app.route("/posts", methods=["POST", "GET"])
+def posts():
     title_error = ""
     body_error = ""
     posts = Post.query.all()

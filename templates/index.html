@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+
+
+
+<div class= "row">
+<div class= "col-md-12">
+
+
+{% for user in user_list %}
+
+<div class="card mb-12">
+          
+          <div class="card-body">
+            <h2 class="card-title">{{ user.email }}</h2>
+            <!-- maybe add a "user description" field or smth idk 
+            <p class="card-text"> Maybe smth here idk </p>
+            -->
+            <a href="/blog?user={{ user.id }}" class="btn btn-primary">View Blog &rarr;</a>
+          </div>
+</div>
+{% endfor %}
+
+</div>
+</div>
+
+{% endblock %}
