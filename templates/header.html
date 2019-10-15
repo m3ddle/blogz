@@ -1,5 +1,7 @@
 {% block content %}
 
+
+<!--
 <div class="header">
   <nav>
   <div> <a href="/">Posts</a>   
@@ -7,5 +9,33 @@
    <div> <a href="/logout">Log Out</a></div>
   </nav>
 </div>
+-->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="/">Blogz</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarResponsive">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="/">Home
+              <span class="sr-only">(current)</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/add-post">Add a New Post</a>
+          </li>
+          <li class="nav-item">
+          {% if session["email"] != "" %}
+            <a class="nav-link" href="/logout">Log Out</a>
+            {% else %}
+            <a class="nav-link" href="/login">Log In</a>
+            {% endif %}
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
 
 {% endblock %}

@@ -4,13 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <!-- Bootstrap core CSS -->
+    <link href="/static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="/static/styles.css" />
+    <link href="/static/blog-home.css" rel="stylesheet">
     <title>Build-a-Blog</title>
   </head>
   <body>
 
 {% include "header.html" %}
-
+<div class="container">
   {% with messages = get_flashed_messages(with_categories=True) %}
   <ul>
   {% for category, message in messages %}
@@ -22,5 +25,12 @@
 
     {% block content %} 
     {% endblock %}
+
+</div>
+{% include "footer.html" %}
+
+<script src="/static/vendor/jquery/jquery.min.js"></script>
+<script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
   </body>
 </html>
