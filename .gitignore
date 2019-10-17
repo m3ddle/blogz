@@ -2,3 +2,7 @@ Pipfile
 Pipfile.lock
 .vscode
 teest.py
+venv/
+__pycache__/
+
+
