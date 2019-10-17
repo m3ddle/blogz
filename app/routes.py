@@ -80,8 +80,8 @@ def register():
         if verify == "":
             verify_error = "Password cannot be blank. "
 
-        if " " in email:
-            email_error = email_error + "Username cannot contain spaces. "
+        if "@" not in email or "." not in email or " " in email:
+            email_error = email_error + "Please enter a valid email address. "
 
         if " " in password:
             password = ""
@@ -92,7 +92,7 @@ def register():
             password = ""
             verify = ""
             verify_error = verify_error + "Does not match password. "
-        # TODO: Validate user data
+
         if not email_error and not password_error and not verify_error:
 
             existing_user = User.query.filter_by(email=email).first()
@@ -105,7 +105,7 @@ def register():
                 return redirect("/add-post")
             else:
                 # TODO: use a better message here
-                return "<h1>Duplicate user</h1>"
+                email_error += "Duplicate user."
 
     return render_template("register.html", email_error=email_error, password_error=password_error, verify_error=verify_error, email=email)
 
